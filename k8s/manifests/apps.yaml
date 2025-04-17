@@ -66,10 +66,10 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
+  name: cnpg-system
   namespace: argocd
   labels:
-    name: longhorn
+    name: cnpg-system
 spec:
   syncPolicy:
     syncOptions:
