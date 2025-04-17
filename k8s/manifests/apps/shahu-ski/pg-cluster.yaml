@@ -1,0 +1,88 @@
+# postgresql cluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-cluster
+  namespace: shahu-ski
+spec:
+  instances: 1
+  primaryUpdateStrategy: unsupervised
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+#  minSyncReplicas: 1 
+#  maxSyncReplicas: 2 # なぜか機能しなかったためコメントアウト
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: longhorn
+      resources:
+        requests:
+          storage: 100Gi
+
+  postgresql:
+    parameters:
+      max_connections: "128"
+      shared_buffers: "2GB"
+      effective_cache_size: "6GB"
+      maintenance_work_mem: "512MB"
+      checkpoint_completion_target: "0.7"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "300"
+      work_mem: "8MB"
+      min_wal_size: "1GB"
+      max_wal_size: "4GB"
+      max_worker_processes: "4"
+      max_parallel_workers_per_gather: "2"
+      max_parallel_workers: "4"
+      max_parallel_maintenance_workers: "2"
+
+  # superUser
+  superuserSecret: 
+    name: shahu-postgres-superuser-secret
+
+  bootstrap:
+    initdb:
+      database: mk1
+      owner: misskey
+      secret:
+        name: shahu-postgres-local-user-secret
+
+  # backup
+#  backup:
+#    barmanObjectStore:
+#      destinationPath: "s3://misskey-backup/postgresql/"
+#      endpointURL: ""
+#      
+#      # https://kubernetes.io/ja/docs/concepts/configuration/secret/
+#      s3Credentials:
+#        accessKeyId:
+#          name: creds
+#          key: ACCESS_KEY_ID
+#        secretAccessKey:
+#          name: creds
+#          key: ACCESS_SECRET_KEY
+#      wal:
+#        compression: gzip
+#      data:
+#        compression: bzip2
+#    retentionPolicy: "30d"
+
+  # Prometheusを使用する場合に設定。CloudNativePGの設定ページに記載されているので参照。
+  #monitoring:
+  #  enablePodMonitor: true
+---
+# backupサイクル設定 CloudNativePGのページを参照
+# https://cloudnative-pg.io/documentation/1.16/backup_recovery/
+#apiVersion: postgresql.cnpg.io/v1
+#kind: ScheduledBackup
+#metadata:
+#  name: shahu-backup
+#  namespace: shahu-ski
+#spec:
+#  schedule: "0 0 0 * * *"
+#  backupOwnerReference: self
+#  cluster:
+#    name: pg-cluster # ここはClusterの方のmetadata.nameを設定する
+

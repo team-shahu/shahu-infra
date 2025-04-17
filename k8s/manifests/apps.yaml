@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: shahu-ski
+  namespace: argocd
+  labels:
+    name: shahu-ski
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: k8s/manifests/apps/shahu-ski
+    repoURL: https://github.com/team-shahu/shahu-infra.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated: {}
+---

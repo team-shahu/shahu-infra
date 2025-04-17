@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keydb
+  namespace: shahu-ski
+spec:
+  selector:
+    app: keydb
+  ports:
+  - name: http
+    port: 6379
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shahu-keydb-pvc
+  namespace: shahu-ski
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: keydb
+  namespace: shahu-ski
+  labels:
+    app: keydb
+spec:
+  restartPolicy: Always
+  containers:
+  - name: keydb
+    image: bitnami/keydb:latest
+    env:
+    - name: ALLOW_EMPTY_PASSWORD
+      value: "yes"
+    volumeMounts:
+    - mountPath: /data
+      name: keydb-volume
+    resources:
+      limits:
+        memory: "100Mi"
+        cpu: "250m"
+    ports:
+    - containerPort: 6379
+  volumes:
+  - name: keydb-volume
+    persistentVolumeClaim:
+      claimName: shahu-keydb-pvc

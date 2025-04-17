@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+  namespace: shahu-ski
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  #clusterIP: None
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+#    nodePort: 300080
+#    protocol: TCP
+
+---
+
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: web-deployment
+  namespace: shahu-ski
+  labels:
+    deploy: web
+spec:
+  replicas: 2
+  #strategy:
+  #  type: RollingUpdate
+  #  rollingUpdate:
+  #    maxSurge: 1
+  #    maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: ghcr.io/team-shahu/misskey:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /misskey/.config
+          name: default-conf-file
+        ports:
+        - containerPort: 3000
+#        resources:
+#          limits:
+#            cpu: "2"
+        # ヘルスチェック
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+            scheme: HTTP
+          initialDelaySeconds: 5
+      volumes:
+      - name: default-conf-file
+        configMap:
+          name: default-conf
+---
+
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: web-ingress
+#  namespace: shahu-ski
+#  annotations:
+#     nginx.ingress.kubernetes.io/proxy-body-size: 200m
+#     nginx.ingress.kubernetes.io/real-ip-header: "X-Real-IP"
+#     nginx.ingress.kubernetes.io/real-ip-header: "CF-Connecting-IP"
+#     nginx.ingress.kubernetes.io/set-forwarded-for: "true"
+#     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+#    kubernetes.io/ingress.class: "nginx"
+#    kubernetes.io/tls-acme: "true"
+#    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+#    cert-manager.io/issuer: "letsencrypt-staging" 
+#spec:
+#  ingressClassName: nginx
+#  rules:
+#    - host: test.nr1q.me
+#      http:
+#        paths:
+#          - pathType: Prefix
+#            backend:
+#              service:
+#                name: web-service
+#                port:
+#                  number: 80
+#            path: /
+#  tls:
+#    - hosts:
+#        - test.nr1q.me
+#      secretName: "missker-test-cert"
+ # tls:
+ # - hosts:
+ #    - www.example.com
+ #    secretName: example-tls
