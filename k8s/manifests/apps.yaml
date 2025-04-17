@@ -26,6 +26,26 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  name: longhorn-ingress
+  namespace: argocd
+  labels:
+    name: longhorn-ingress
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: k8s/manifests/longhorn-ingress
+    repoURL: https://github.com/team-shahu/shahu-infra.git
+    targetRevision: HEAD
+  syncPolicy:
+    automated: {}
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
   name: traefik-ingress
   namespace: argocd
   labels:
@@ -41,6 +61,27 @@ spec:
     targetRevision: HEAD
   syncPolicy:
     automated: {}
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  labels:
+    name: longhorn
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  sources:
+    - chart: cnpg
+      repoURL: https://cloudnative-pg.github.io/charts
+      targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cnpg-system
 ---
 
 apiVersion: argoproj.io/v1alpha1
